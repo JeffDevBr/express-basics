@@ -20,6 +20,24 @@ app.use(express.json())
 
 const users = []
 
+const checkUserId = (req, res, next) => {
+    const {id} = req.params
+
+    const index = users.findIndex(user => user.id === id)
+
+    if (index < 0) {
+        return res.status(404).json({ message: "user not found" })
+    }
+
+    req.userIndex = index
+    req.userId = id
+
+    next()
+}
+
+
+
+
 app.get('/users', (req, res) => {
     res.status(200).json(users)
 })
@@ -33,35 +51,23 @@ app.post('/users', (req, res) => {
     res.status(201).json(users)
 })
 
-app.put('/users/:id', (req, res) => {
-    const id = req.params.id
+app.put('/users/:id', checkUserId, (req, res) => {
     const { name, age } = req.body
+    const index = req.userIndex
+    const id = req.userId
 
     const updateUser = { id, name, age }
-
-    const index = users.findIndex(user => user.id === id)
-
-    if (index < 0) {
-        return res.status(404).json({ message: "user not found" })
-    }
-
+ 
     users[index] = updateUser
 
     res.status(200).json(users)
 })
 
 
-app.delete('/users/:id', (req, res) => {
-    const id = req.params.id
-
-    const index = users.findIndex(user => user.id === id)
-
-    if (index < 0) {
-        return res.status(404).json({ message: "user not found" })
-    }
+app.delete('/users/:id', checkUserId, (req, res) => {
+    const index = req.userIndex
 
     users.splice(index, 1)
-
     res.status(204).json(users)
 })
 
